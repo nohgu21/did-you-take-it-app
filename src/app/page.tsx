@@ -5,27 +5,30 @@ import confetti from "canvas-confetti";
 import { type ChecklistItem, officeItems, partyItems, dateItems, gymItems } from '../types/checklistData'
 import Checklist from './components/Checklist';
 import Header from './components/Header';
-import  useLocalStorage from '../hooks/useLocalStorage'
+import useLocalStorage from '../hooks/useLocalStorage'
+import useWeather from '@/hooks/useWeather';
+import { Thermometer, ThermometerSun, ThermometerSnowflake } from 'lucide-react'
 
 type Category = 'office' | 'party' | 'date' | 'gym'
 
 export default function Page() {
-  const [category, setCategory] = useLocalStorage<Category>('checklist-category','office' as Category)
+  const [category, setCategory] = useLocalStorage<Category>('checklist-category', 'office' as Category)
   const [officeChecklist, setOfficeChecklist] = useLocalStorage<ChecklistItem[]>('office-checklist', officeItems)
   const [partyChecklist, setPartyChecklist] = useLocalStorage<ChecklistItem[]>('party-checklist', partyItems)
   const [dateChecklist, setDateChecklist] = useLocalStorage<ChecklistItem[]>('date-checklist', dateItems)
   const [gymChecklist, setGymChecklist] = useLocalStorage<ChecklistItem[]>('gym-checklist', gymItems)
   const [showModal, setShowModal] = useState(false)
   const [newItem, setNewItem] = useState('')
+  const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null)
 
-  const categoryItems: Record <Category, ChecklistItem[]> = {
+  const categoryItems: Record<Category, ChecklistItem[]> = {
     office: officeChecklist,
     party: partyChecklist,
     date: dateChecklist,
     gym: gymChecklist
   }
 
-  const categorySetting: Record <Category, (items: ChecklistItem[]) => void> = {
+  const categorySetting: Record<Category, (items: ChecklistItem[]) => void> = {
     office: setOfficeChecklist,
     party: setPartyChecklist,
     date: setDateChecklist,
@@ -37,8 +40,8 @@ export default function Page() {
 
   const handleCheckBox = (id: number) => {
     const updatedItems = items.map((item: ChecklistItem) => item.id === id ? { ...item, isChecked: !item.isChecked } : item
-      )
-      categorySetting[category](updatedItems)
+    )
+    categorySetting[category](updatedItems)
   };
 
   const addItem = () => {
@@ -54,15 +57,15 @@ export default function Page() {
   }
 
   const deleteItem = (id: number) => {
-    const updatedItems = items.filter( item => item.id !== id)
+    const updatedItems = items.filter(item => item.id !== id)
     categorySetting[category](updatedItems)
   }
-  
+
   const isComplete = useRef(false)
 
   useEffect(() => {
-    const allChecked = 
-    items.length > 0 && items.every(item => item.isChecked)
+    const allChecked =
+      items.length > 0 && items.every(item => item.isChecked)
     if (allChecked && !isComplete.current) {
       confetti({
         particleCount: 1000,
@@ -70,14 +73,44 @@ export default function Page() {
         origin: { y: 0.5 }
       });
       setShowModal(true)
-      
+
     }
     isComplete.current = allChecked
   }, [items]);
 
   useEffect(() => {
-  setShowModal(false)
-}, [category])
+    setShowModal(false)
+  }, [category])
+
+  useEffect(() => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lon: position.coords.longitude
+          })
+        },
+      (error) => {
+          console.error('Location error:', error)
+          setUserLocation({ lat: 6.5244, lon: 3.3792 })
+        })
+
+    } else {
+      setUserLocation({ lat: 6.5244, lon: 3.3792 })
+    }
+  }, [])
+
+  const { weather, loading, error } = useWeather(
+    userLocation?.lat,
+    userLocation?.lon
+  );
+
+  const getThermometerIcon = (temp: number) => {
+    if (temp <= 10) return <ThermometerSnowflake className="text-blue-400"/>
+    if (temp >= 30) return <ThermometerSun className="text-orange-600"/>
+    return <Thermometer className="text-red-400"/>
+  }
 
   const categoryTitles: Record<Category, string> = {
     office: "Heading out to the office? Don't forget your...",
@@ -89,6 +122,18 @@ export default function Page() {
   return (
     <>
       <Header />
+
+      {loading && <div className="m-6 text-white">Loading weather...</div>}
+      {error && <div className="m-6 text-red-400">Weather error: {error}</div>}
+      {weather && (
+        <div className="w-1/2 m-6 p-4 bg-zinc-800 rounded-lg border border-zinc-700">
+          {getThermometerIcon(weather.temperature)}
+          <p className="text-white text-lg">
+             {Math.round(weather.temperature)}°C - {weather.condition}
+          </p>
+          <p className="text-zinc-400 text-sm">{weather.description}</p>
+        </div>
+      )}
 
       <div className="m-6 flex gap-4">
         <button onClick={() => setCategory('office')}
@@ -123,21 +168,21 @@ export default function Page() {
         </h2>
 
         <div className="flex gap-2">
-    <input
-      type="text"
-      value={newItem}
-      onChange={(e) => setNewItem(e.target.value)}
-      onKeyPress={(e) => e.key === 'Enter' && addItem()}
-      placeholder="Add new item..."
-      className="flex-1 px-3 py-2 bg-zinc-800 text-white rounded-lg border border-zinc-700 focus:outline-none focus:border-blue-500"
-    />
-    <button
-      onClick={addItem}
-      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-    >
-      Add
-    </button>
-  </div>
+          <input
+            type="text"
+            value={newItem}
+            onChange={(e) => setNewItem(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && addItem()}
+            placeholder="Add new item..."
+            className="flex-1 px-3 py-2 bg-zinc-800 text-white rounded-lg border border-zinc-700 focus:outline-none focus:border-yellow-900"
+          />
+          <button
+            onClick={addItem}
+            className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-900"
+          >
+            Add
+          </button>
+        </div>
 
         {items.map((item) => (
           <Checklist
