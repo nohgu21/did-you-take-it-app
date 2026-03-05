@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 
     if (!lat || !lon) {
         return NextResponse.json (
-            { error: 'Latitude and Longitude are required'},
+            {error: 'Latitude and Longitude are required'},
             {status: 400}
         )
     }

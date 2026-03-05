@@ -7,7 +7,7 @@ import Checklist from './components/Checklist';
 import Header from './components/Header';
 import useLocalStorage from '../hooks/useLocalStorage'
 import useWeather from '@/hooks/useWeather';
-import { Thermometer, ThermometerSun, ThermometerSnowflake } from 'lucide-react'
+import { Thermometer, ThermometerSun, ThermometerSnowflake, Sun } from 'lucide-react'
 
 type Category = 'office' | 'party' | 'date' | 'gym'
 
@@ -91,7 +91,7 @@ export default function Page() {
             lon: position.coords.longitude
           })
         },
-      (error) => {
+        (error) => {
           console.error('Location error:', error)
           setUserLocation({ lat: 6.5244, lon: 3.3792 })
         })
@@ -107,9 +107,16 @@ export default function Page() {
   );
 
   const getThermometerIcon = (temp: number) => {
-    if (temp <= 10) return <ThermometerSnowflake className="text-blue-400"/>
-    if (temp >= 30) return <ThermometerSun className="text-orange-600"/>
-    return <Thermometer className="text-red-400"/>
+    if (temp <= 10) return <ThermometerSnowflake className="text-blue-400" />
+    if (temp >= 30) return <ThermometerSun className="text-orange-600" />
+    return <Thermometer className="text-red-400" />
+  }
+
+  const getWeatherSuggestion = (temp: number, condition: string) => {
+    if (temp <= 10) return "Could use a heavy jacket and a muffler for this weather"
+    if (condition.toLowerCase().includes('rain')) return "Don't forget to take an umbrella or a raincoat"
+    if (temp >= 28) return "Take a waterbottle... stay hydrated"
+    return "Looks like a nice day today!"
   }
 
   const categoryTitles: Record<Category, string> = {
@@ -127,13 +134,24 @@ export default function Page() {
       {error && <div className="m-6 text-red-400">Weather error: {error}</div>}
       {weather && (
         <div className="w-1/2 m-6 p-4 bg-zinc-800 rounded-lg border border-zinc-700">
-          {getThermometerIcon(weather.temperature)}
+          <div className="flex gap-2">
+            {getThermometerIcon(weather.temperature)}
           <p className="text-white text-lg">
-             {Math.round(weather.temperature)}°C - {weather.condition}
+            {Math.round(weather.temperature)}°C - {weather.condition}
           </p>
+          </div>
           <p className="text-zinc-400 text-sm">{weather.description}</p>
+          <p className="text-zinc-400 text-sm flex gap-2">
+            <Sun/>
+            <div className="mt-1">
+             {getWeatherSuggestion(weather.temperature, weather.condition)}
+
+            </div>
+          </p>
         </div>
       )}
+
+
 
       <div className="m-6 flex gap-4">
         <button onClick={() => setCategory('office')}
