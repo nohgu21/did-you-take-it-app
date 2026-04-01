@@ -37,12 +37,12 @@ export default function Page() {
 
   const items = categoryItems[category]
 
-
   const handleCheckBox = (id: number) => {
-    const updatedItems = items.map((item: ChecklistItem) => item.id === id ? { ...item, isChecked: !item.isChecked } : item
+    const updatedItems = items.map((item: ChecklistItem) =>
+      item.id === id ? { ...item, isChecked: !item.isChecked } : item
     )
     categorySetting[category](updatedItems)
-  };
+  }
 
   const addItem = () => {
     if (newItem.trim() === '') return
@@ -51,71 +51,53 @@ export default function Page() {
       name: newItem.trim(),
       isChecked: false
     }
-    const updatedItems = [...items, newChecklistItem]
-    categorySetting[category](updatedItems)
+    categorySetting[category]([...items, newChecklistItem])
     setNewItem('')
   }
 
   const deleteItem = (id: number) => {
-    const updatedItems = items.filter(item => item.id !== id)
-    categorySetting[category](updatedItems)
+    categorySetting[category](items.filter(item => item.id !== id))
   }
 
   const isComplete = useRef(false)
 
   useEffect(() => {
-    const allChecked =
-      items.length > 0 && items.every(item => item.isChecked)
+    const allChecked = items.length > 0 && items.every(item => item.isChecked)
     if (allChecked && !isComplete.current) {
-      confetti({
-        particleCount: 1000,
-        spread: 100,
-        origin: { y: 0.5 }
-      });
+      confetti({ particleCount: 1000, spread: 100, origin: { y: 0.5 } })
       setShowModal(true)
-
     }
     isComplete.current = allChecked
-  }, [items]);
+  }, [items])
 
-  useEffect(() => {
-    setShowModal(false)
-  }, [category])
+  useEffect(() => { setShowModal(false) }, [category])
 
   useEffect(() => {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lon: position.coords.longitude
-          })
-        },
-        (error) => {
-          console.error('Location error:', error)
-          setUserLocation({ lat: 6.5244, lon: 3.3792 })
-        })
-
+        (position) => setUserLocation({
+          lat: position.coords.latitude,
+          lon: position.coords.longitude
+        }),
+        () => setUserLocation({ lat: 6.5244, lon: 3.3792 })
+      )
     } else {
       setUserLocation({ lat: 6.5244, lon: 3.3792 })
     }
   }, [])
 
-  const { weather, loading, error } = useWeather(
-    userLocation?.lat,
-    userLocation?.lon
-  );
+  const { weather, loading, error } = useWeather(userLocation?.lat, userLocation?.lon)
 
   const getThermometerIcon = (temp: number) => {
     if (temp <= 10) return <ThermometerSnowflake className="text-blue-400" />
-    if (temp >= 30) return <ThermometerSun className="text-orange-600" />
-    return <Thermometer className="text-red-400" />
+    if (temp >= 30) return <ThermometerSun style={{ color: '#E87A6A' }} />
+    return <Thermometer style={{ color: '#E87A6A' }} />
   }
 
   const getWeatherSuggestion = (temp: number, condition: string) => {
     if (temp <= 10) return "Could use a heavy jacket and a muffler for this weather"
     if (condition.toLowerCase().includes('rain')) return "Don't forget to take an umbrella or a raincoat"
-    if (temp >= 28) return "Take a waterbottle... stay hydrated"
+    if (temp >= 28) return "Take a water bottle... stay hydrated"
     return "Looks like a nice day today!"
   }
 
@@ -123,35 +105,45 @@ export default function Page() {
     office: "Heading out to the office? Don't forget your...",
     party: "Heading out to have fun? Don't forget your...",
     date: "Heading out on a date? Don't forget your...",
-    gym: "Heading out for a work out? Don't forget your..."
+    gym: "Heading out for a workout? Don't forget your..."
   }
 
   return (
-    <>
+    <div className="min-h-screen" style={{ background: '#111114' }}>
       <Header />
 
-      {loading && <div className="m-6 text-white">Loading weather...</div>}
-      {error && <div className="m-6 text-red-400">Weather error: {error}</div>}
-      {weather && (
-        <div className="w-1/2 m-6 p-4 bg-zinc-800 rounded-lg border border-zinc-700">
-          <div className="flex gap-2">
-            {getThermometerIcon(weather.temperature)}
-          <p className="text-white text-lg">
-            {Math.round(weather.temperature)}°C - {weather.condition}
-          </p>
-          </div>
-          <p className="text-zinc-400 text-sm">{weather.description}</p>
-          <p className="text-zinc-400 text-sm flex gap-2">
-            <Sun/>
-            <div className="mt-1">
-             {getWeatherSuggestion(weather.temperature, weather.condition)}
+      <div className="px-4 py-6 max-w-lg mx-auto space-y-4">
 
+        {loading && (
+          <p className="text-sm" style={{ color: '#6E6E80' }}>Loading weather...</p>
+        )}
+        {error && (
+          <p className="text-sm" style={{ color: '#E05555' }}>Weather error: {error}</p>
+        )}
+        {weather && (
+          <div
+            className="w-full p-4 rounded-xl border"
+            style={{ background: '#1C1C21', borderColor: '#2C2C34' }}
+          >
+            <div className="flex items-center gap-2">
+              {getThermometerIcon(weather.temperature)}
+              <p className="text-base font-medium" style={{ color: '#F0EEF8' }}>
+                {Math.round(weather.temperature)}°C — {weather.condition}
+              </p>
             </div>
-          </p>
-        </div>
-      )}
+            <p className="text-sm mt-1" style={{ color: '#6E6E80' }}>
+              {weather.description}
+            </p>
+            <div className="flex items-start gap-2 mt-2">
+              <Sun size={16} className="shrink-0 mt-0.5" style={{ color: '#E87A6A' }} />
+              <p className="text-sm" style={{ color: '#6E6E80' }}>
+                {getWeatherSuggestion(weather.temperature, weather.condition)}
+              </p>
+            </div>
+          </div>
+        )}
 
-      <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
           {(['office', 'party', 'date', 'gym'] as Category[]).map((cat) => (
             <button
               key={cat}
@@ -209,25 +201,28 @@ export default function Page() {
             />
           ))}
         </div>
-
+      </div>
 
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
-          <div className="bg-zinc-900 p-6 rounded-xl w-[90%] max-w-sm text-center space-y-3 shadow-xl">
-            <h2 className="text-white text-lg font-semibold">You did it! 🎉</h2>
-            <p className="text-zinc-300">Have a great day ahead!</p>
+        <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50 px-4">
+          <div
+            className="p-6 rounded-2xl w-full max-w-sm text-center space-y-3 border"
+            style={{ background: '#1C1C21', borderColor: '#2C2C34' }}
+          >
+            <h2 className="text-lg font-semibold" style={{ color: '#F0EEF8' }}>
+              You did it! 🎉
+            </h2>
+            <p style={{ color: '#6E6E80' }}>Have a great day ahead!</p>
             <button
               onClick={() => setShowModal(false)}
-              className="mt-4 px-4 py-2 rounded-lg bg-white text-black font-medium hover:bg-zinc-200 transition"
+              className="mt-2 px-5 py-2 rounded-lg font-medium transition-colors"
+              style={{ background: '#E87A6A', color: '#1A0800' }}
             >
               Close
             </button>
           </div>
         </div>
       )}
-
-    </>
+    </div>
   )
 }
-
-
