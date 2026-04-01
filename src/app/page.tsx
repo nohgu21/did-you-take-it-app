@@ -151,69 +151,65 @@ export default function Page() {
         </div>
       )}
 
-
-
-      <div className="m-6 flex gap-4">
-        <button onClick={() => setCategory('office')}
-          className={`px-4 py-2 border rounded-lg ${category === 'office' ? 'cursor-pointer hover:translate-y-[-2px] hover:shadow-md bg-zinc-800 text-neutral-100' : 'bg-zinc-800 text-gray-400'}`}
-        >
-          Office
-        </button>
-
-        <button onClick={() => setCategory('party')}
-          className={`px-4 py-2 border rounded-lg ${category === 'party' ? 'cursor-pointer hover:translate-y-[-2px] hover:shadow-md bg-zinc-800 text-neutral-100' : 'bg-zinc-800 text-gray-400'}`}
-        >
-          Party
-        </button>
-
-        <button onClick={() => setCategory('date')}
-          className={`px-4 py-2 border rounded-lg ${category === 'date' ? 'cursor-pointer hover:translate-y-[-2px] hover:shadow-md bg-zinc-800 text-neutral-100' : 'bg-zinc-800 text-gray-400'}`}
-        >
-          Date
-        </button>
-
-        <button onClick={() => setCategory('gym')}
-          className={`px-4 py-2 border rounded-lg ${category === 'gym' ? 'cursor-pointer hover:translate-y-[-2px] hover:shadow-md bg-zinc-800 text-neutral-100' : 'bg-zinc-800 text-gray-400'}`}
-        >
-          Gym
-        </button>
-      </div>
-
-
-      <div className="m-6 space-y-3 p-6 bg-zinc-900 w-1/2 border rounded-lg">
-        <h2 className="text-neutral-100 text-md">
-          {categoryTitles[category]}
-        </h2>
-
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={newItem}
-            onChange={(e) => setNewItem(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && addItem()}
-            placeholder="Add new item..."
-            className="flex-1 px-3 py-2 bg-zinc-800 text-white rounded-lg border border-zinc-700 focus:outline-none focus:border-yellow-900"
-          />
-          <button
-            onClick={addItem}
-            className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-900"
-          >
-            Add
-          </button>
+      <div className="flex flex-wrap gap-2">
+          {(['office', 'party', 'date', 'gym'] as Category[]).map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setCategory(cat)}
+              className="px-4 py-2 rounded-lg border text-sm font-medium capitalize transition-all hover:-translate-y-0.5"
+              style={
+                category === cat
+                  ? { background: '#E87A6A', color: '#1A0800', borderColor: '#E87A6A' }
+                  : { background: '#1C1C21', color: '#6E6E80', borderColor: '#2C2C34' }
+              }
+            >
+              {cat}
+            </button>
+          ))}
         </div>
 
-        {items.map((item) => (
-          <Checklist
-            key={item.id}
-            name={item.name}
-            isChecked={item.isChecked}
-            onChange={() => handleCheckBox(item.id)}
-            onDelete={() => deleteItem(item.id)}
-          />
-        ))}
+        <div
+          className="w-full space-y-3 p-5 rounded-xl border"
+          style={{ background: '#1C1C21', borderColor: '#2C2C34' }}
+        >
+          <h2 className="text-sm font-medium" style={{ color: '#6E6E80' }}>
+            {categoryTitles[category]}
+          </h2>
 
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newItem}
+              onChange={(e) => setNewItem(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addItem()}
+              placeholder="Add new item..."
+              className="flex-1 px-3 py-2 rounded-lg border text-sm focus:outline-none"
+              style={{
+                background: '#111114',
+                color: '#F0EEF8',
+                borderColor: '#2C2C34',
+              }}
+            />
+            <button
+              onClick={addItem}
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              style={{ background: '#E87A6A', color: '#1A0800' }}
+            >
+              Add
+            </button>
+          </div>
 
-      </div>
+          {items.map((item) => (
+            <Checklist
+              key={item.id}
+              name={item.name}
+              isChecked={item.isChecked}
+              onChange={() => handleCheckBox(item.id)}
+              onDelete={() => deleteItem(item.id)}
+            />
+          ))}
+        </div>
+
 
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
