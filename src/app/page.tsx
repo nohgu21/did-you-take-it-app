@@ -8,6 +8,7 @@ import Header from './components/Header';
 import useLocalStorage from '../hooks/useLocalStorage'
 import useWeather from '@/hooks/useWeather';
 import { Thermometer, ThermometerSun, ThermometerSnowflake, Sun } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 type Category = 'office' | 'party' | 'date' | 'gym'
 
@@ -95,11 +96,20 @@ export default function Page() {
   }
 
   const getWeatherSuggestion = (temp: number, condition: string) => {
-    if (temp <= 10) return "Could use a heavy jacket and a muffler for this weather"
-    if (condition.toLowerCase().includes('rain')) return "Don't forget to take an umbrella or a raincoat"
-    if (temp >= 28) return "Take a water bottle... stay hydrated"
-    return "Looks like a nice day today!"
+  const hour = new Date().getHours()
+  const isNight = hour >= 18 || hour < 6
+
+  if (condition.toLowerCase().includes('rain')) return "Don't forget to take an umbrella or a raincoat"
+  if (temp <= 10) return "Could use a heavy jacket and a muffler for this weather"
+  
+  if (isNight) {
+    if (temp <= 10) return "It's a cold night out there, bundle up"
+    if (temp >= 28) return "It's a warm night out there, stay cool"
   }
+
+  if (temp >= 28) return "Take a water bottle... stay hydrated"
+  return "Looks like a nice day today!"
+}
 
   const categoryTitles: Record<Category, string> = {
     office: "Heading out to the office? Don't forget your...",
@@ -120,8 +130,12 @@ export default function Page() {
         {error && (
           <p className="text-sm" style={{ color: '#E05555' }}>Weather error: {error}</p>
         )}
+
         {weather && (
-          <div
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
             className="w-full p-4 rounded-xl border"
             style={{ background: '#1C1C21', borderColor: '#2C2C34' }}
           >
@@ -140,7 +154,7 @@ export default function Page() {
                 {getWeatherSuggestion(weather.temperature, weather.condition)}
               </p>
             </div>
-          </div>
+          </motion.div>
         )}
 
         <div className="flex flex-wrap gap-2">
